@@ -9,6 +9,8 @@ import shutil
 import sys
 import multiprocessing
 import requests
+import json
+
 
 sg.theme("SystemDefault")
 
@@ -62,6 +64,7 @@ def add_to_startup_linux():
     with open(desktop_path, 'w') as desktop_file:
         desktop_file.write(desktop_content)
 
+
 if os.name == 'posix':
     try:
         add_to_startup_linux()
@@ -79,17 +82,38 @@ def play_azan(name):
     title = name
     message = f'Time to Pray {name}'
     notification.notify(title=title, message=message, timeout=10)
-    time.sleep(60) # make it longer with the pause
+    time.sleep(120) # make it longer with the pause
     pygame.mixer.music.stop()
     pygame.mixer.quit()
 
-def gui_process():
-    ''' keep the state and country for further updates
-    # state = input("Enter State: ")
-    # country = input("Enter Country: ")
-    '''
-    
-    url = requests.get(f"https://aladhan.com/play/{state or suburb}/{country}") # add your state/suburb and country
+
+def get_state_country():
+        # Create a PySimpleGUI window to get user input
+    layout = [
+        [sg.Text("Enter State: "), sg.InputText(key="state")],
+        [sg.Text("Enter Country: "), sg.InputText(key="country")],
+        [sg.Button("Submit", key='Submit')]
+    ]
+
+    window = sg.Window("State and Country Input", layout, icon='minaret_prayer_call_sound_islam_adzan_icon_251083.ico')
+
+    while True:
+        event, values = window.read()
+        if event == sg.WINDOW_CLOSED:
+            break
+        elif event == "Submit":
+            window.close()
+            state = values["state"]
+            country = values["country"]
+            locations = {"state" : state, "country" : country}
+            with open("location.json", 'w') as file:
+                json.dump(locations, file)
+            if state and country:
+                url = f"https://aladhan.com/play/{state}/{country}"        
+    return url
+
+def gui_process(url):
+    url = requests.get(url) # add your state/suburb and country
     soup = BeautifulSoup(url.content, 'html.parser')
 
     prayer = {}
@@ -110,32 +134,40 @@ def gui_process():
         [sg.Frame("Prayer Times", layout=prayer_display)]
     ]
 
-    window = sg.Window("", pray_frame, grab_anywhere=True, icon='adhan-call.png', titlebar_icon='adhan-call.png', no_titlebar=True)#'muslim_carpet_prayer_mat_sajadah_icon_251091.ico')
+    window = sg.Window("", pray_frame, grab_anywhere=True, icon='minaret_prayer_call_sound_islam_adzan_icon_251083.ico', titlebar_icon='adhan-call.png', no_titlebar=True)#'muslim_carpet_prayer_mat_sajadah_icon_251091.ico')
 
     bg_process = multiprocessing.Process(target=play_azan, args=("Prayer Name",))
     bg_process.daemon = True
-
+    
     while True:
         event, value = window.read(timeout=1000)
+        if event == sg.WINDOW_CLOSED:
+            break
         time_now = datetime.datetime.now().strftime('%H:%M')
         window['time_now'].update(time_now)
         for name, time_text in prayer.items():
             prayer_time = datetime.datetime.strptime(time_text, '%H:%M').time()
             current_time = datetime.datetime.strptime(time_now, '%H:%M').time()
             if prayer_time == current_time:
+                bg_process.start()
                 window[name].update(text_color="red")
                 window[time_text].update(text_color="red")
                 play_azan(name)
+                return True
             elif prayer_time > current_time:
                 window[name].update(text_color="green")
                 window[time_text].update(text_color="green")
             else:
                 window[name].update(text_color="red")
                 window[time_text].update(text_color="red")
-        if event == sg.WINDOW_CLOSED:
-            bg_process.start()
-            break
+
     window.close()
 
 if __name__ == '__main__':
-    gui_process()
+    if os.path.isfile('location.json'):
+        with open('location.json', 'r') as file:
+            file = json.load(file)
+        gui_process(url=f"https://aladhan.com/play/{file['state']}/{file['country']}"  )
+    else:
+        gui_process(url=get_state_country())
+    
