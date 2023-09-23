@@ -31,9 +31,8 @@ Notes
 Prayer times are scraped from the "aladhan.com" website.
 The application uses a system tray icon to provide a simple interface for accessing prayer times and updating the location.
 I still Need to work on making the popup from the Viewing the Praying times nicer and cleaner.
-I Had start on system startup but windows was flaging it down as a trojan so I removed it for now.
-The Images is from the previous time I created this widget app so there has been a few changes, and I will update again when 
-I feel That the comleted widget is finalized.
+I Had start on system startup but windows was flaging it down as a trojan so I removed it.
+
 ![Screenshot from 2023-08-22 13-48-04](https://github.com/Moe-Dahan/Azan-Reminder/assets/83793097/6de863a5-7198-40d8-a6c3-470a178a8742)
 ![Screenshot from 2023-08-22 13-48-16](https://github.com/Moe-Dahan/Azan-Reminder/assets/83793097/5252f9da-bbc1-4515-82c5-1a20ef34ea24)
 ![Screenshot from 2023-08-22 13-48-30](https://github.com/Moe-Dahan/Azan-Reminder/assets/83793097/4c338a00-9651-4a93-86fa-147befc572b0)
